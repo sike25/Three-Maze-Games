@@ -1,0 +1,243 @@
+
+  Notes on Designing Buttons.
+    jb.setOpaque(true);
+    jb.setBorderPainted(false);
+    jb.setBackground(Color.RED);
+    jb.setForeground(new Color(0,0,255));
+
+    Storing the player's position in your array (as a 3 value) is poor design:
+    you should use that just for maze design and store the player's position in separate variables
+    Your colouring switch statement could first check if the position being drawn matches the player's position
+    to determine where the blue square should be.
+    Or alternatively you could draw that square after you've drawn the maze
+    Moving should then be pretty trivial: just change the player's position variables
+    after checking there is no wall in the new position
+
+  public void Transitions () {
+        //i, j
+        //as long as each button exists in the grid
+       enable: [pickN() + i] [j]
+               [pickN() - i] [j]
+               [i] [pickN() + j]
+               [i] [pickN() - j]
+    }
+
+    Location
+         the places you can be
+         You may have more than one kind of location.
+         Think about distinguishing start, goal and intermediary locations in some way.
+         The Locations will probably not vary from maze type to maze type.
+         A location will contain (at least) a list of Transitions,
+         which describe the places you can go from the location
+
+    Transitions
+        a transition is a move from one location to another,
+        which appears in the physical maze. Whether you can take a
+        transition or not may depend on something in the State of the
+        search
+            A Transition should contain the target location. Some methods in a
+        Transition will need to be passed a State in order to decide whether or not
+        the transition applies. This may depend on various things, which will
+        normally be stored in the Information object. The Transition should also
+        contain a method to make the transition: given a State, this will produce a
+        new State. (These methods can be the same, with the method returning null
+        if the Transition does not apply)
+            You will have a number of kinds of transitions, but they must all be
+        related - either in a class hierarchy or as fellow implementers of an interface.
+        Again, you choose.
+
+    State
+        A State consists of a Location plus any other needed
+        Information about the state of the world. This additional needed
+        Information should be stored in a single Object field that the Transition
+        will cast to the type it expects.
+        Whether you can take a transition or not may depend on something in the State of the search.
+
+    Information
+
+    Key
+        If I am in a Location and I know my Information , I know what
+        Transition(s) I can take
+
+        getTransition within FirstMaze
+         public ArrayList<Step> getTransitions(int a, int b) {
+            int add = Step.pickN(a, b);
+        if (a + add < steps.length) { //down
+        //                        System.out.println("down");
+        //                        System.out.println(add);
+        //                    transitions.add( steps[a + add][b]);
+        //                }
+        //
+        //                if (a - add >= 0) { //up
+        //                        System.out.println("up");
+        //                    transitions.add(steps[a - add][b]);
+        //                }
+        //
+        //                if (b + add < steps[0].length) { //right
+        //                        System.out.println("right");
+        //                    transitions.add(steps[a][b + add]);
+        //                }
+        //
+        //                if (b - add >= 0) { //left
+        //                        System.out.println("left");
+        //                    transitions.add(steps[a][b - add]);
+        //                }
+        //            return transitions;
+        //        }
+
+        MORE COMMENTED OUT CODE: Testing
+        //initialization of buttons (as a Step object), game and handler
+                //    steps = new Step [getButtonCount()] [getButtonCount()];
+
+                //        steps [0][0] = new Step(0, 0, "start", this);
+                //        contentPane.add(steps[0][0]);
+                //        steps[0][0].setTransitions(steps[0][0].getTransitions(0, 0));
+                //
+                //        steps [0][6] = new Step(0, 6, "regular", this);
+                //        steps [6][0] = new Step(6, 0, "regular", this);
+                //        contentPane.add(steps[0][6]);
+                //        contentPane.add(steps[6][0]);
+                //        getTransitions(0, 6);
+                //        steps[0][6].setTransitions(steps[0][6].getTransitions(0, 6));
+
+                //        FirstGame fg = new FirstGame();
+                //        Handler1 h1 = new Handler1(this, fg);
+
+
+//        for (int i = 0; i < locations.size(); i++) {
+//            if (locations.get(i) == steps[a][b]) {
+//                System.out.println(a + " " + b);
+//                System.out.println("is locations null? " + (locations.get(i) == null));
+//                System.out.println("is steps-a,b null? " + (steps[a][b] == null));
+//                System.out.println();
+//                return locations.get(i);
+//            }
+//        }
+
+//        System.out.println("a is " + a);
+//        System.out.println("b is " + b);
+//        System.out.println("test " + steps [0][6]);
+//        System.out.println(steps[0] [0] == null);
+//        System.out.println(steps[0] [6] == null);
+
+ /*
+        0 = space           0 = space
+        1 = plus            1 = red
+        2 = star            2 = blue
+        3 = diamond         3 = yellow
+        4 = flower          4 = green
+     */
+
+ private int[][] shape = {
+            {0, 0, 1, 0, 0, 0},
+            {1, 2, 3, 3, 3, 2},
+            {2, 3, 2, 1, 2, 4},
+            {4, 1, 2, 4, 3, 1},
+            {2, 3, 1, 3, 4, 4},
+            {0, 4, 0, 0, 0, 0}
+    };
+
+    private int[][] color = {
+            {0, 0, 4, 0, 0, 0},
+            {1, 1, 3, 2, 1, 3},
+            {3, 3, 1, 4, 4, 4},
+            {1, 1, 4, 2, 3, 3},
+            {4, 1, 3, 3, 4, 2},
+            {0, 3, 0, 0, 0, 0}
+    };
+
+
+
+     if (maze[i][j] == 1) {
+                        steps3[i][j] = new ThirdMaze.Step3(i, j, "red", "plus");
+                        contentPane3.add(steps3[i][j]);
+                    }
+                    else if (maze[i][j] == 2) {
+                        steps3[i][j] = new ThirdMaze.Step3(i, j, "red", "star");
+                        contentPane3.add(steps3[i][j]);
+                    }
+                    else if (maze[i][j] == 3) {
+                        steps3[i][j] = new ThirdMaze.Step3(i, j, "red", "diamond");
+                        contentPane3.add(steps3[i][j]);
+                    }
+                    else if (maze[i][j] == 4) {
+                        steps3[i][j] = new ThirdMaze.Step3(i, j, "red", "flower");
+                        contentPane3.add(steps3[i][j]);
+                    }
+                    else if (maze[i][j] == 5) {
+                        steps3[i][j] = new ThirdMaze.Step3(i, j, "blue", "diamond");
+                        contentPane3.add(steps3[i][j]);
+                    }
+                    else if (maze[i][j] == 6) {
+                        steps3[i][j] = new ThirdMaze.Step3(i, j, "blue", "flower");
+                        contentPane3.add(steps3[i][j]);
+                    }
+                    else if (maze[i][j] == 7) {
+                        steps3[i][j] = new ThirdMaze.Step3(i, j, "yellow", "plus");
+                        contentPane3.add(steps3[i][j]);
+                    }
+                    else if (maze[i][j] == 8) {
+                        steps3[i][j] = new ThirdMaze.Step3(i, j, "yellow", "star");
+                        contentPane3.add(steps3[i][j]);
+                    }
+                    else if (maze[i][j] == 9) {
+                        steps3[i][j] = new ThirdMaze.Step3(i, j, "yellow", "diamond");
+                        contentPane3.add(steps3[i][j]);
+                    }
+                    else if (maze[i][j] == 10) {
+                        steps3[i][j] = new ThirdMaze.Step3(i, j, "yellow", "flower");
+                        contentPane3.add(steps3[i][j]);
+                    }
+                    else if (maze[i][j] == 11) {
+                        steps3[i][j] = new ThirdMaze.Step3(i, j, "green", "plus");
+                        contentPane3.add(steps3[i][j]);
+                    }
+                    else if (maze[i][j] == 12) {
+                        steps3[i][j] = new ThirdMaze.Step3(i, j, "green", "star");
+                        contentPane3.add(steps3[i][j]);
+                    }
+                    else if (maze[i][j] == 12) {
+                        steps3[i][j] = new ThirdMaze.Step3(i, j, "green", "flower");
+                        contentPane3.add(steps3[i][j]);
+                    }
+                    else {
+                        steps3[i][j] = new ThirdMaze.Step3(i, j, "blank", "blank");
+                        contentPane3.add(steps3[i][j]);
+                    }
+
+ "FIRST MAZE: Numbers Maze" +
+ "\nYou begin this game on the square at the upper left. " +
+                                   "\nWhat you have to do is make a series of moves that will take you to the square marked Goal. " +
+                                    "\nEach square has a number that indicates how far you must move--" +
+                                    "\nhorizontally or vertically--when you leave the square." +
+                                    "\n   " +
+                                    "SECOND MAZE: Colors Maze" +
+                                    "\nEnter by the bottom red path and end on the center gray square. " +
+                                    "\nYou may retrace your path but may not make a U-turn on a pathway. " +
+                                    "\nYou must follow the paths in the order red, blue, yellow and then red, blue, " +
+                                    "\nyellow again, as needed, changing color on the white squares." +
+                                    "\n    " +
+                                    "THIRD MAZE: Patterns Maze" +
+                                    "That circle with the two little eyeballs is you. The eyeballs show \n" +
+                                    "which direction you’re facing. What you have to do is make a series of \n" +
+                                    "moves that will get you onto the square (or squares) marked GOAL.\n" +
+                                    "You can move horizontally or vertically for any distance, as long as you do \n" +
+                                    "not move over any blank spaces. However, you can only end your move on a \n" +
+                                    "square that has either the same symbol or the same color as the square your \n" +
+                                    "move started on (moving to both the same symbol and the same color is also \n" +
+                                    "okay). You can move straight ahead or to your right or left, but you may not \n" +
+                                    "move to a square that is behind you. If you move to the right or left, your \n" +
+                                    "eyeballs will then be pointing in a new direction";
+
+
+
+
+                                     ArrayList<Boolean> trackRow = new ArrayList<>();
+                                            ArrayList<Boolean> trackCol = new ArrayList<>();
+                                            //size
+                                            for (int i = 0; i < stepCount; i++) {
+                                                trackRow.add(false);
+                                                trackCol.add(false);
+                                            }
+                                            trackRow.add(0, true);
+                                            trackCol.add(0, true);

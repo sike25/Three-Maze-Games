@@ -1,0 +1,872 @@
+FIRST MAZE
+
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Scanner;
+import javax.swing.*;
+import javax.swing.JButton;
+
+//Display Class
+public class FirstMaze extends JFrame implements FinalProjectMazes{
+    Container contentPane;
+    private int buttonCount = 2; //initialized incorrectly. Reading from the file will fix it.
+    private Step [][] steps;
+    private String title;
+    private String spec1;
+    private String spec2;
+    private String spec3;
+
+    public static void main(String[] args) {
+        FirstMaze thisOne = new FirstMaze();
+        thisOne.SetUp();
+        thisOne.pack();
+        thisOne.setVisible(true);
+        thisOne.setSize(new Dimension(400, 400));
+    }
+
+    public void SetUp() {
+
+        try {
+            readFile();
+        }
+        catch (FileNotFoundException e) {
+            System.out.println("The program can not find the specified file: " + e);
+            e.printStackTrace();
+        }
+
+        //sets up container and sets layout grid
+        contentPane = this.getContentPane();
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        contentPane.setLayout(new GridLayout(buttonCount + 1, buttonCount));
+        this.setTitle(title);
+
+        steps = new Step[buttonCount][buttonCount];
+        for (int i = 0; i < buttonCount; i++) {
+            for (int j = 0; j < buttonCount; j++) {
+                //create and add buttons to the container
+                //for the start button
+                if (i == 0 && j == 0) {
+                    steps[i][j] = new Step(i, j, spec1);
+                    contentPane.add(steps[i][j]);
+                }
+                //for the goal button
+                else if (i == buttonCount - 1 && j == buttonCount - 1) {
+                    steps[i][j] = new Step(i, j, spec2);
+                    contentPane.add(steps[i][j]);
+                }
+                //every other button
+                else {
+                    steps[i][j] = new Step(i, j, spec3);
+                    contentPane.add(steps[i][j]);
+                }
+            }
+        }
+        executeAddTransitions();
+        Panel();
+    }
+
+    public void readFile() throws FileNotFoundException {
+        File file = new File("FirstMaze_File");
+        Scanner sc = new Scanner(file);
+
+        while (sc.hasNextInt()) {
+            buttonCount = sc.nextInt();
+        }
+
+        while (sc.hasNextLine()) {
+            sc.next();
+            title = sc.nextLine();
+            spec1 = sc.nextLine();
+            spec2 = sc.nextLine();
+            spec3 = sc.nextLine();
+        }
+
+    }
+
+    public void Panel() {
+        JPanel panel = new JPanel();
+        panel.setSize(400, 40);
+        panel.setLayout(new FlowLayout());
+        contentPane.add(panel);
+
+        JButton button = new JButton("Switch Game");
+        panel.add(button);
+
+        Handler h = new Handler(this, button);
+        button.addActionListener(h);
+    }
+
+    public void executeAddTransitions() {
+        for (int i = 0; i < buttonCount; i++) {
+            for (int j = 0; j < buttonCount; j++) {
+                steps[i][j].addTransitions(i, j);
+            }
+        }
+    }
+
+    public Step getButton(int a, int b) {
+        return steps[a][b];
+    }
+
+    public Step[][] getSteps() {
+        return steps;
+    }
+
+    public int getButtonCount(){
+        return buttonCount;
+    }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Button Class: Creates each button.
+// Location Class.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    class Step extends JButton implements ActionListener {
+        private int ii; //number of rows
+        private int jj; // and columns
+        private String type;
+        private ArrayList <Step> transitions = new ArrayList<>();
+        private ArrayList <Step> pressed = new ArrayList<>();
+        private boolean enabled;
+
+        public Step (int i, int j, String t) {
+            super();
+            ii = i;
+            jj = j;
+            type = t;
+            this.addActionListener(this);
+            if (type.equals("start")) {  //set the start button enabled
+                setEnabled(true);
+                enabled = true;
+            }
+            else {
+                setEnabled(false);  //set everything else disabled
+            }
+        }
+
+        public int getIi () {
+            return ii;
+        }
+
+        public int getJj (){
+            return jj;
+        }
+
+        public ArrayList<Step> getTransitions() {
+            return transitions;
+        }
+
+        public void addTransitions(int a, int b) {
+            int add = Step.pickN(a, b);
+
+            if (a + add < 7) { //down
+                transitions.add(steps[a + add][b]);
+            }
+
+            if (a - add >= 0) { //up
+                transitions.add(steps[a - add][b]);
+            }
+
+            if (b + add < 7) { //right
+                transitions.add(steps[a][b + add]);
+            }
+
+            if (b - add >= 0) { //left
+                transitions.add(steps[a][b - add]);
+            }
+        }
+
+        public void paintComponent (Graphics g) {
+            super.paintComponent(g);
+            InscribeButtons(); //inscribe the buttons
+        }
+
+        public void InscribeButtons() {
+            int a;
+            if (type.equals("start")) {   //set "start" text on the start button, and 6
+                a = 6;
+                setText("Start: " + a);
+            }
+            else if (type.equals("goal")) {  //set "goal" text on the "goal" button,
+                setText("Goal");
+            }
+            else {
+                a = pickN(ii, jj);  //set the appropriate numbers on each button: call pickN
+                setText("" + a);
+            }
+        }
+
+        public static int pickN (int i, int j) {
+            if ((i == 0 && j == 4) || (i == 0 && j == 0)) return 6;
+            if ((i == 0 && j == 6) || (i == 1 && j == 1) || (i == 3 && j == 5) ||
+                (i == 5 && j == 1) || (i == 5 && j == 6)|| (i == 6 && j == 1)) return 5;
+
+            if ((i == 0 && j == 3) || (i == 1 && j == 3)|| (i == 1 && j == 4)|| (i == 1 && j == 5)|| (i == 2 && j == 5)
+                || (i == 3 && j == 1)|| (i == 4 && j == 0)|| (i == 4 && j == 1)|| (i == 4 && j == 2) || (i == 4 && j == 6)
+                || (i == 5 && j == 2)|| (i == 6 && j == 4) || (i == 6 && j == 5)) return 4;
+
+            if ((i == 0 && j == 1) || (i == 1 && j == 0)|| (i == 2 && j == 0)|| (i == 2 && j == 1)|| (i == 2 && j == 3)
+                || (i == 2 && j == 4)|| (i == 3 && j == 0)|| (i == 3 && j == 6)|| (i == 4 && j == 4) || (i == 5 && j == 4)
+                || (i == 6 && j == 0)) return 3;
+
+            if ((i == 0 && j == 2) || (i == 0 && j == 5)|| (i == 1 && j == 2)|| (i == 2 && j == 2)|| (i == 2 && j == 6)
+                 || (i == 3 && j == 3)|| (i == 3 && j == 4)|| (i == 4 && j == 3)|| (i == 4 && j == 5) || (i == 5 && j == 0)
+                 || (i == 5 && j == 3) || (i == 5 && j == 5)|| (i == 6 && j == 2)) return 2;
+
+            if ((i == 1 && j == 6) || (i == 3 && j == 2) || (i == 6 && j == 3)) return 1;
+
+            else return 0;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            pressed.add(this);
+
+            if (enabled){
+                for(int i = 0; i < buttonCount; i++){
+                    for(int j = 0; j < buttonCount; j++){
+                        steps[i][j].setEnabled(false);
+                        enabled = false;
+                        steps[i][j].setBackground(null);
+                    }
+                }
+                enabled = true ;
+                setBackground(Color.DARK_GRAY);
+
+                for (int i = 0; i < transitions.size(); i++) {
+                    transitions.get(i).setEnabled(true);
+                    int a = transitions.get(i).getIi();
+                    int b = transitions.get(i).getJj();
+                    steps[a][b].enabled = true;
+                }
+            }
+        }
+    }
+}
+
+
+SECOND MAZE
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Objects;
+import javax.swing.*;
+import javax.swing.JButton;
+//The array list pressed's length has an error of +1.
+//it's first element is location 0, 0
+
+public class SecondMaze extends JFrame implements FinalProjectMazes{
+    private Step2 [][] steps2;
+    Container contentPane2;
+    private int buttonCount2 = 21;
+    private ArrayList<SecondMaze.Step2> pressed = new ArrayList<>();
+    private String lastP = "red";
+
+    /*
+        21 rows * 21 columns
+        1 = wall   (black)
+        2 = red
+        3 = blue
+        4 = yellow
+        5 = space  (white)
+        0 = target (grey)
+     */
+
+    private int [][] maze = {
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+
+            {1, 2, 2, 2, 1, 4, 4, 4, 1, 3, 3, 3, 3, 3, 3, 3, 1, 4, 4, 4, 1},
+            {1, 2, 1, 2, 1, 4, 1, 4, 1, 3, 1, 1, 1, 1, 1, 3, 1, 4, 1, 4, 1},
+
+            {1, 2, 1, 5, 5, 5, 1, 4, 4, 5, 5, 5, 2, 2, 2, 5, 5, 5, 1, 4, 1},
+            {1, 2, 1, 5, 5, 5, 1, 1, 1, 5, 5, 5, 1, 1, 1, 5, 5, 5, 1, 4, 1},
+            {1, 2, 1, 5, 5, 5, 3, 3, 3, 5, 5, 5, 1, 4, 4, 5, 5, 5, 1, 4, 1},
+
+            {1, 2, 1, 3, 1, 4, 1, 1, 1, 1, 1, 4, 1, 4, 1, 1, 1, 2, 1, 4, 1},
+            {1, 2, 1, 3, 1, 4, 1, 4, 4, 4, 4, 4, 1, 4, 1, 2, 2, 2, 1, 4, 1},
+            {1, 2, 1, 3, 1, 4, 1, 4, 1, 1, 1, 1, 1, 4, 1, 2, 1, 1, 1, 4, 1},
+
+            {1, 2, 2, 5, 5, 5, 1, 4, 1, 0, 0, 0, 1, 4, 1, 5, 5, 5, 4, 4, 1},
+            {1, 1, 1, 5, 5, 5, 1, 4, 1, 0, 0, 0, 1, 4, 1, 5, 5, 5, 1, 1, 1},
+            {1, 4, 4, 5, 5, 5, 4, 4, 1, 0, 0, 0, 4, 4, 1, 5, 5, 5, 3, 3, 1},
+
+            {1, 4, 1, 2, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 3, 1},
+            {1, 4, 1, 2, 1, 3, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 4, 1, 3, 1},
+            {1, 4, 1, 2, 1, 3, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1, 4, 1, 3, 1},
+
+            {1, 4, 1, 5, 5, 5, 2, 2, 1, 5, 5, 5, 4, 4, 4, 5, 5, 5, 1, 3, 1},
+            {1, 4, 1, 5, 5, 5, 1, 1, 1, 5, 5, 5, 1, 1, 1, 5, 5, 5, 1, 3, 1},
+            {1, 4, 1, 5, 5, 5, 1, 3, 3, 5, 5, 5, 3, 3, 3, 5, 5, 5, 1, 3, 1},
+
+            {1, 4, 1, 4, 1, 3, 1, 3, 1, 2, 1, 2, 1, 1, 1, 2, 1, 3, 1, 3, 1},
+            {1, 4, 4, 4, 1, 3, 3, 3, 1, 2, 1, 2, 2, 2, 2, 2, 1, 3, 3, 3, 1},
+
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+
+    };
+
+    public static void main (String [] args){
+        SecondMaze thisTwo = new SecondMaze();
+        thisTwo.SetUp();
+        thisTwo.pack();
+        thisTwo.setVisible(true);
+        thisTwo.setSize(new Dimension(27*30, 27*30));
+        thisTwo.setTitle("Color Maze");
+    }
+
+    public void SetUp() {
+        //sets up container and sets layout grid
+        contentPane2 = this.getContentPane();
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        contentPane2.setLayout(new GridLayout(buttonCount2 + 1, buttonCount2));
+        contentPane2.setSize(buttonCount2*30, buttonCount2*30);
+
+
+        steps2 = new SecondMaze.Step2[buttonCount2][buttonCount2];
+        for (int i = 0; i < maze.length; i++) {
+            for (int j = 0; j < maze[0].length; j++) {
+
+                if (maze[i][j] == 1) {
+                    steps2[i][j] = new SecondMaze.Step2(i, j, "wall");
+                    contentPane2.add(steps2[i][j]);
+                }
+                else if (maze[i][j] == 2) {
+                    steps2[i][j] = new SecondMaze.Step2(i, j, "red");
+                    contentPane2.add(steps2[i][j]);
+                }
+                else if (maze[i][j] == 3) {
+                    steps2[i][j] = new SecondMaze.Step2(i, j, "blue");
+                    contentPane2.add(steps2[i][j]);
+                }
+                else if (maze[i][j] == 4) {
+                    steps2[i][j] = new SecondMaze.Step2(i, j, "yellow");
+                    contentPane2.add(steps2[i][j]);
+                }
+                else if (maze[i][j] == 5) {
+                    steps2[i][j] = new SecondMaze.Step2(i, j, "space");
+                    contentPane2.add(steps2[i][j]);
+                }
+                else if (maze[i][j] == 6) {
+                    steps2[i][j] = new SecondMaze.Step2(i, j, "start");
+                    contentPane2.add(steps2[i][j]);
+                }
+                else if (maze[i][j] == 0) {
+                    steps2[i][j] = new SecondMaze.Step2(i, j, "goal");
+                    contentPane2.add(steps2[i][j]);
+                }
+                else {
+                    steps2[i][j] = new SecondMaze.Step2(i, j, "space");
+                    contentPane2.add(steps2[i][j]);
+                }
+            }
+        }
+        executeAddTransitions();
+        pressed.add(steps2[0][0]);
+        Panel();
+    }
+
+    public void Panel() {
+        JPanel panel = new JPanel();
+        panel.setSize(400, 40);
+        panel.setLayout(new FlowLayout());
+        contentPane2.add(panel);
+
+        JButton button = new JButton("Switch Game");
+        panel.add(button);
+
+        Handler h = new Handler(this, button);
+        button.addActionListener(h);
+    }
+
+    public void executeAddTransitions() {
+        for (int i = 0; i < maze.length; i++) {
+            for (int j = 0; j < maze.length; j++) {
+                steps2[i][j].addTransitions(i, j);
+            }
+        }
+    }
+
+    public int[][] getMaze(){
+        return maze;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Button Class: Creates each button.
+// Location Class.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    class Step2 extends JButton implements ActionListener {
+        private int ii; //number of rows
+        private int jj; // and columns
+        private String type;
+        private ArrayList<SecondMaze.Step2> transitions = new ArrayList<>();
+        private boolean isClicked;
+        private boolean enabled;
+
+        public Step2(int i, int j, String t) {
+            super();
+            ii = i;
+            jj = j;
+            type = t;
+            this.addActionListener(this);
+            if (type.equals("start")) {  //set the start button enabled
+                setEnabled(true);
+                enabled = true;
+            } else {
+                setEnabled(false);  //set everything else disabled
+            }
+        }
+
+        public int getIi() {
+            return ii;
+        }
+
+        public int getJj() {
+            return jj;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public void paint(Graphics g) {
+            super.paint(g);
+            g.translate(50, 50);
+            for (int row = 0; row < maze.length; row++) {
+                for (int col = 0; col < maze[0].length; col++) {
+                    setBackground(pickColor());
+                    setHorizontalAlignment(0);
+                    setSize(37, 37);
+                }
+            }
+        }
+
+        public Color pickColor() {
+            if (Objects.equals(type, "wall")) {
+                return Color.BLACK;
+            }
+            if (Objects.equals(type, "red")) {
+                return Color.RED;
+            }
+            if (Objects.equals(type, "blue")) {
+                return Color.BLUE;
+            }
+            if (Objects.equals(type, "yellow")) {
+                return Color.YELLOW;
+            }
+            if (Objects.equals(type, "goal")) {
+                return Color.GRAY;
+            } else {
+                return Color.white;
+            }
+        }
+
+        public void addTransitions(int a, int b) {
+            if (a + 1 < maze.length && !steps2[a + 1][b].type.equals("wall"))
+                transitions.add(steps2[a + 1][b]);
+            if (a - 1 >= 0 && !steps2[a - 1][b].type.equals("wall"))
+                transitions.add(steps2[a - 1][b]);
+            if (b + 1 < maze.length && !steps2[a][b + 1].type.equals("wall"))
+                transitions.add(steps2[a][b + 1]);
+            if (b - 1 >= 0 && !steps2[a][b - 1].type.equals("wall"))
+                transitions.add(steps2[a][b - 1]);
+        }
+
+        public ArrayList<Step2> makeInformation() {
+            ArrayList<SecondMaze.Step2> forbid = new ArrayList<>();
+            forbid.add(steps2[0][0]);
+
+            if (lastP.equals("red")) {
+                for (int i = 0; i < maze.length; i++) {
+                    for (int j = 0; j < maze[0].length; j++) {
+                        if (steps2[i][j].type.equals("yellow")) {
+                            forbid.add(steps2[i][j]);
+                        }
+                    }
+                }
+            }
+
+            if (lastP.equals("blue")) {
+                for (int i = 0; i < maze.length; i++) {
+                    for (int j = 0; j < maze[0].length; j++) {
+                        if (steps2[i][j].type.equals("red")) {
+                            forbid.add(steps2[i][j]);
+                        }
+                    }
+                }
+            }
+
+            if (lastP.equals("yellow")) {
+                for (int i = 0; i < maze.length; i++) {
+                    for (int j = 0; j < maze[0].length; j++) {
+                        if (steps2[i][j].type.equals("blue")) {
+                            forbid.add(steps2[i][j]);
+                        }
+                    }
+                }
+            }
+            return forbid;
+        }
+
+        public boolean infoForbids(int a, int b) {
+            boolean temp = false;
+            for (int i = 0; i < makeInformation().size(); i++) {
+                if (steps2[a][b].equals(makeInformation().get(i)))
+                    temp = true;
+            }
+            return temp;
+        }
+
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (!type.equals("space")) lastP = type;
+            setBackground(Color.DARK_GRAY);
+            pressed.add(this);
+
+            if (enabled) {
+                for (int i = 0; i < maze.length; i++) {
+                    for (int j = 0; j < maze[0].length; j++) {
+                        steps2[i][j].setEnabled(false);
+                        enabled = false;
+                        //steps2[i][j].setBackground(null);
+                    }
+                }
+                enabled = true;
+
+                for (int i = 0; i < transitions.size(); i++) {
+                    if (!infoForbids(transitions.get(i).ii, transitions.get(i).jj)) {
+                        transitions.get(i).setEnabled(true);
+                        transitions.get(i).setBackground(Color.BLACK);
+                        transitions.get(i).enabled = true;
+                    }
+                }
+                System.out.println(pressed.size() + " " + (pressed.size() - 2));
+
+                pressed.get(pressed.size() - 2).setEnabled(false); //disable the last button
+                pressed.get(pressed.size() - 2).enabled = false;
+                int a = pressed.get(pressed.size() - 2).ii;
+                int b = pressed.get(pressed.size() - 2).jj;
+                System.out.println(a + " " + b);
+            }
+        }
+    }
+}
+
+
+THIRD MAZE
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+//The array list forbid has an error of +1. The first element given as location 1,1
+
+public class ThirdMaze extends JFrame implements FinalProjectMazes{
+    Container contentPane3;
+    private Step3[][] steps3;
+    private int countPressed;
+    private ArrayList<ThirdMaze.Step3> pressed = new ArrayList<>();
+
+/*
+     0 - space
+     1 = red plus                7 = yellow plus
+     2 = red star                8 = yellow star
+     3 = red diamond             9 = yellow diamond
+     4 = red flower              10 = yellow flower
+
+     5 = blue diamond            11 = green plus
+     6 = blue flower             12 = green star
+                                 13 = green flower
+*/
+
+
+    private int[][] maze = {
+            {0, 0, 11, 0, 0, 0},
+            {1, 2, 9, 5, 3, 9},
+            {8, 9, 2, 11, 12, 13},
+            {4, 1, 12, 6, 9, 7},
+            {12, 3, 7, 3, 13, 6},
+            {0, 10, 0, 0, 0, 0}
+    };
+
+    public static void main(String[] args) {  //Might be useless af
+        ThirdMaze thirdMaze = new ThirdMaze();
+        thirdMaze.SetUp();
+        thirdMaze.pack();
+        thirdMaze.setVisible(true);
+        thirdMaze.setSize(new Dimension(400, 400));
+    }
+
+    public void SetUp() {
+        //creates container
+        contentPane3 = this.getContentPane();
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        contentPane3.setLayout(new GridLayout(maze.length + 1, maze[0].length));
+
+        steps3 = new Step3[maze.length][maze.length];
+        for (int i = 0; i < maze.length; i++) {
+            for (int j = 0; j < maze[0].length; j++) {
+                steps3[i][j] = new ThirdMaze.Step3(i, j, maze[i][j]);
+                contentPane3.add(steps3[i][j]);
+            }
+        }
+        executeAddTransitions();
+        Panel();
+    }
+
+    public void executeAddTransitions() {
+        for (int i = 0; i < maze.length; i++) {
+            for (int j = 0; j < maze[0].length; j++) {
+                steps3[i][j].addTransitions(i, j);
+            }
+        }
+    }
+
+    public void Panel() {
+        JPanel panel = new JPanel();
+        panel.setSize(400, 40);
+        panel.setLayout(new FlowLayout());
+        contentPane3.add(panel);
+
+        JButton button = new JButton("Switch Game");
+        panel.add(button);
+
+        Handler h = new Handler(this, button);
+        button.addActionListener(h);
+    }
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    class Step3 extends JButton implements ActionListener {
+        private int ii; //number of rows
+        private int jj; // and columns
+        private int type;
+        private ArrayList<ThirdMaze.Step3> transitions = new ArrayList<>();
+        private boolean enabled;
+
+        public Step3(int i, int j, int t) {
+            super();
+            ii = i;
+            jj = j;
+            type = t;
+            this.addActionListener(this);
+            if (type == 10) {  //set the start button enabled
+                setEnabled(true);
+                enabled = true;
+            } else {
+                setEnabled(false);  //set everything else disabled
+            }
+        }
+
+        public int getIi() {
+            return ii;
+        }
+
+        public int getJj() {
+            return jj;
+        }
+
+        public int getType() {
+            return type;
+        }
+
+        public ArrayList getPressed() {
+            return pressed;
+        }
+
+        public void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            setBackground(pickColor(ii, jj));
+            setText(pickShape(ii, jj));
+
+//            String filename = pickShape(ii, jj);
+//            ImageIcon icon = new ImageIcon(filename);
+//            Image image = icon.getImage();
+//            Image newimg = image.getScaledInstance(120, 120,  Image.SCALE_AREA_AVERAGING);
+//            icon = new ImageIcon(newimg);
+//            setIcon(icon);
+        }
+
+        public Color pickColor(int i, int j) {
+            int typ = steps3[i][j].getType();
+
+            if ((typ == 6) || (typ == 5)) return Color.BLUE;
+
+            if ((typ == 1) || (typ == 2) || (typ == 3) || (typ == 4)) return Color.RED;
+
+            if ((typ == 7) || (typ == 8) || (typ == 9) || (typ == 10)) return Color.YELLOW;
+
+            if ((typ == 11) || (typ == 12) || (typ == 13)) return Color.green;
+
+            else return Color.white;
+        }
+
+        public String pickShape(int i, int j) {
+            int typ = steps3[i][j].getType();
+
+            if ((typ == 1) || (typ == 7) || (typ == 11)) return "plus.png";
+
+            if ((typ == 2) || (typ == 8) || (typ == 12)) return "star.png";
+
+            if ((typ == 3) || (typ == 5) || (typ == 9)) return "diamond.png";
+
+            if ((typ == 4) || (typ == 6) || (typ == 10) || (typ == 13)) return "flower.png";
+
+            else return "";
+        }
+
+        public void addTransitions(int a, int b) {
+            String match = pickShape(a, b);
+            Color same = pickColor(a, b);
+
+            for (int i = 0; i < maze.length; i++) {
+                for (int j = 0; j < maze[0].length; j++) {
+                    if ((steps3[i][j].getIi() == a) || (steps3[i][j].getJj() == b)) {
+                        if ((pickColor(i, j).equals(same)) || pickShape(i, j).equals(match)) {
+                            transitions.add(steps3[i][j]);
+                        }
+                    }
+                }
+            }
+        }
+
+        public ArrayList makeInformation() {
+            int size = pressed.size();
+            Step3 second = pressed.get(size - 1);
+            Step3 first = pressed.get(size - 2);
+            ArrayList<Step3> forbid = new ArrayList<>();
+            forbid.add(steps3[0][0]);
+
+//change begins now
+            if (first.getIi() == second.getIi()) { //when the two last buttons pressed are within the same row
+                if (first.jj < second.jj) {  //if the first is before the second
+                    for (int c = 0; c <= second.jj; c++) { //run through all the buttons between them, add to forbid
+                        forbid.add(steps3[first.ii][c]);
+                    }
+                }
+                if (first.jj > second.jj) {  //if the first is after the second
+                    for (int c = second.jj; c < maze.length; c++) { //run through all the buttons between them, add to forbid
+                        forbid.add(steps3[first.ii][c]);
+                    }
+                }
+            }
+
+            if (first.getJj() == second.getJj()) { //if the first pressed and second pressed are on the same column
+                if (first.ii < second.ii) {  //if the first is lower than the second
+                    for (int c = 0; c <= second.ii; c++) { //run through all the buttons between them, add to forbid
+                        forbid.add(steps3[c][first.jj]);
+                    }
+                }
+                if (first.ii > second.ii) {  //if the first is higher than the second
+                    for (int c = second.ii; c < maze.length; c++) { //run through all the buttons between them, add to forbid
+                        forbid.add(steps3[c][first.jj]);
+                    }
+                }
+            }
+            return forbid;
+        }
+
+        public boolean infoForbids(int a, int b) {
+            boolean temp = false;
+            for (int i = 0; i < makeInformation().size(); i++) {
+                if (steps3[a][b].equals(makeInformation().get(i)))
+                    temp = true;
+            }
+            return temp;
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            countPressed++;
+            pressed.add(this);
+            enabled = true;
+            setBackground(Color.DARK_GRAY);
+
+            if (enabled) {
+                for (int i = 0; i < maze.length; i++) {
+                    for (int j = 0; j < maze[0].length; j++) {
+                        steps3[i][j].setEnabled(false);
+                        enabled = false;
+                        steps3[i][j].setBackground(null);
+                    }
+                }
+                enabled = true;
+
+                for (int i = 0; i < transitions.size(); i++) {
+                    transitions.get(i).setEnabled(true);
+                    transitions.get(i).setBackground(null);
+                    transitions.get(i).enabled = true;
+                }
+
+                if (countPressed >= 2) {
+                    Step3 temp;
+                    for (int i = 0; i < makeInformation().size(); i++) {
+                        temp = (Step3) makeInformation().get(i);
+                        steps3[temp.ii][temp.jj].setEnabled(false);
+                        steps3[temp.ii][temp.jj].enabled = false;
+                    }
+                }
+            }
+        }
+    }
+}
+
+ if (toVisit.get(0) == null) {
+                System.out.println("testttt1 " + toVisit);
+                toVisit.remove(0);
+                System.out.println("testttt2 " + toVisit);
+                return false;
+            }
+
+
+
+            for (Step s : getTransitions(temp)) {
+
+                if (s is not visited){
+                    put s in visited;
+                    bkptr[s] = temp;
+                    toVisit.add(s)
+                }
+            }
+
+
+            for (int i = 0; i < next.size(); i++) {
+                if (!inToVisit(next.get(i))) {
+                    if (next.get(i).equals(goal)) {
+                        System.out.println("goal found");
+                        break;
+                    }
+                    toVisit.add(next.remove(i));
+                }
+            }
+        }
+        return Path;
