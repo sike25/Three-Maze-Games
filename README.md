@@ -1,5 +1,5 @@
 # Three-Maze-Games
-A project that implements three different maze games, allows the user to try solve 
+A Java Swing project that implements three different maze games, allows the user to try solve 
 them and displays a solution reached by a single maze-solver that uses a breadth-first
 search algorithm to reach a solution for each of the mazes.
 
